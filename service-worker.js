@@ -1,48 +1,14 @@
-const CACHE_NAME = 'drop-in-coin-v1';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon.png'
-];
+// 最小限のService Worker
+// 今は特にオフラインキャッシュはせず、PWAとしての「インストール可能」条件を満たすためだけに用意しています。
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
+self.addEventListener('install', function (event) {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
+self.addEventListener('activate', function (event) {
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).then((response) => {
-          // Cache same-origin GET requests for future offline use
-          if (
-            event.request.method === 'GET' &&
-            response &&
-            response.status === 200 &&
-            response.type === 'basic'
-          ) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-          }
-          return response;
-        }).catch(() => cached)
-      );
-    })
-  );
+self.addEventListener('fetch', function (event) {
+  // 何もせず、通常通りネットワークから取得する
 });
