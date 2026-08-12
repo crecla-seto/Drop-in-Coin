@@ -4,24 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Drop-in-Coin</title>
+
+  <!-- iOS (iPhone/iPad) 用ホーム画面アイコン -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <!-- Android / PC 用アイコン -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+
   <style>
-    /* 画面全体にGASアプリを全画面表示するスタイル */
+    /* 画面全体にGASアプリを隙間なく表示する設定 */
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
+      background-color: #ffffff;
     }
     iframe {
       width: 100%;
       height: 100%;
       border: none;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <!-- src にご自身のGAS WebアプリURLを設定 -->
+
+  <!-- GASのWebアプリURL（画面全体に表示） -->
   <iframe src="https://script.google.com/macros/s/AKfycbxm5xAR-2qiSsSGMgKKUpvSUuJeo84_lWIgQU0wJQbB-v4iv0HPh22lciU9bK48YBcO/exec"></iframe>
+
 </body>
 </html>
