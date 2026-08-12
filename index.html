@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BGM & 効果音 テスト</title>
+  <title>ジャズBGM & 効果音 テスト</title>
   <style>
     body {
       font-family: sans-serif;
@@ -14,7 +14,8 @@
       height: 100vh;
       margin: 0;
       gap: 20px;
-      background-color: #f4f4f4;
+      background-color: #2c2c2c;
+      color: #fff;
     }
     button {
       font-size: 18px;
@@ -22,14 +23,15 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: background-color 0.2s;
     }
     #start-btn {
       background-color: #4CAF50;
       color: white;
     }
     #start-btn:disabled {
-      background-color: #cccccc;
+      background-color: #666;
       cursor: not-allowed;
     }
     #coin-btn {
@@ -42,53 +44,163 @@
 
   <h1>Webゲーム画面</h1>
   
-  <!-- ボタン領域 -->
   <button id="start-btn">ゲームスタート（BGM再生）</button>
   <button id="coin-btn">コインを落とす（効果音）</button>
 
   <script>
-    // --------------------------------------------------
-    // 1. 音声ファイルの読み込み設定
-    // ※ GitHub上のファイル名（大文字・小文字）と正確に合わせてください
-    // ※ パスの先頭に "/" はつけないでください（例: 'bgm.mp3' や './bgm.mp3'）
-    // --------------------------------------------------
-    const bgm = new Audio('bgm.mp3');
-    const coinSe = new Audio('coin.mp3'); // 効果音のファイル名に合わせて変更してください
+    let audioCtx = null;
+    let isPlaying = false;
 
-    // BGMのループ再生を有効化
-    bgm.loop = true;
+    // 音源データの準備（Web Audio API）
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
 
     // --------------------------------------------------
-    // 2. HTML要素の取得
+    // コイン効果音（合成音）
+    // --------------------------------------------------
+    function playCoinSound() {
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      // 高い金属的なピッチをすばやく遷移させる
+      osc.frequency.setValueAtTime(987.77, now); // B5
+      osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+
+    // --------------------------------------------------
+    // ジャズ風BGM生成エンジン
+    // --------------------------------------------------
+    function startJazzBGM() {
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      isPlaying = true;
+
+      // ジャズコード進行 (Fmaj7 -> D7 -> Gm7 -> C7)
+      const chords = [
+        [174.61, 220.00, 261.63, 329.63], // Fmaj7
+        [146.83, 220.00, 261.63, 311.13], // D7
+        [196.00, 233.08, 293.66, 349.23], // Gm7
+        [130.81, 207.65, 261.63, 311.13]  // C7(b9)
+      ];
+
+      // ソロ用ペンタトニック/ブルーノートスケール音高 (F, Ab, A, C, D, Eb)
+      const scale = [349.23, 415.30, 440.00, 523.25, 587.33, 622.25, 698.46, 830.61];
+
+      let step = 0;
+      const tempo = 120; // BPM
+      const stepTime = (60 / tempo) / 2; // 8分音符の間隔
+
+      function playStep() {
+        if (!isPlaying) return;
+
+        const now = audioCtx.currentTime;
+        const chordIndex = Math.floor((step / 8) % chords.length);
+        const currentChord = chords[chordIndex];
+
+        // 1. ウッドベース（ウォーキングベース風）
+        if (step % 2 === 0) {
+          const bassOsc = audioCtx.createOscillator();
+          const bassGain = audioCtx.createGain();
+          bassOsc.type = 'triangle';
+          
+          // コードのルート音やアプローチノート
+          const bassNote = currentChord[0] / 2;
+          bassOsc.frequency.setValueAtTime(bassNote, now);
+
+          bassGain.gain.setValueAtTime(0.4, now);
+          bassGain.gain.exponentialRampToValueAtTime(0.01, now + stepTime * 1.5);
+
+          bassOsc.connect(bassGain);
+          bassGain.connect(audioCtx.destination);
+          bassOsc.start(now);
+          bassOsc.stop(now + stepTime * 1.5);
+        }
+
+        // 2. ピアノコード伴奏（スウィングの裏拍で鳴らす）
+        if (step % 4 === 1 || step % 8 === 6) {
+          currentChord.forEach(freq => {
+            const pianoOsc = audioCtx.createOscillator();
+            const pianoGain = audioCtx.createGain();
+            pianoOsc.type = 'sine';
+            pianoOsc.frequency.setValueAtTime(freq, now);
+
+            pianoGain.gain.setValueAtTime(0.08, now);
+            pianoGain.gain.exponentialRampToValueAtTime(0.001, now + stepTime * 2);
+
+            pianoOsc.connect(pianoGain);
+            pianoGain.connect(audioCtx.destination);
+            pianoOsc.start(now);
+            pianoOsc.stop(now + stepTime * 2);
+          });
+        }
+
+        // 3. サックス風メロディ（ランダム生成）
+        if (Math.random() > 0.4) {
+          const mOsc = audioCtx.createOscillator();
+          const mGain = audioCtx.createGain();
+          mOsc.type = 'sawtooth';
+
+          const note = scale[Math.floor(Math.random() * scale.length)];
+          mOsc.frequency.setValueAtTime(note, now);
+
+          // 柔らかな鳴り出し（フィルター）
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(1200, now);
+
+          mGain.gain.setValueAtTime(0.05, now);
+          mGain.gain.exponentialRampToValueAtTime(0.001, now + stepTime * 1.2);
+
+          mOsc.connect(filter);
+          filter.connect(mGain);
+          mGain.connect(audioCtx.destination);
+          mOsc.start(now);
+          mOsc.stop(now + stepTime * 1.2);
+        }
+
+        step++;
+        setTimeout(playStep, stepTime * 1000);
+      }
+
+      playStep();
+    }
+
+    // --------------------------------------------------
+    // イベントの設定
     // --------------------------------------------------
     const startBtn = document.getElementById('start-btn');
     const coinBtn = document.getElementById('coin-btn');
 
-    // --------------------------------------------------
-    // 3. スタートボタンを押したときの処理（BGMの再生）
-    // --------------------------------------------------
     startBtn.addEventListener('click', () => {
-      // ブラウザの自動再生規制を回避するため、クリックイベント内でplay()を実行
-      bgm.play().then(() => {
-        console.log('BGMの再生を開始しました');
-        startBtn.textContent = '再生中…';
-        startBtn.disabled = true; // 二重再生防止のためボタンを無効化
-      }).catch(error => {
-        console.error('BGMの再生に失敗しました:', error);
-        alert('BGMが見つからないか、再生できませんでした。ファイル名や配置場所を確認してください。');
-      });
+      startJazzBGM();
+      startBtn.textContent = 'BGM再生中…';
+      startBtn.disabled = true;
     });
 
-    // --------------------------------------------------
-    // 4. コインボタンを押したときの処理（効果音の再生）
-    // --------------------------------------------------
     coinBtn.addEventListener('click', () => {
-      // 連続で押された場合も最初から再生し直す（再生位置をリセット）
-      coinSe.currentTime = 0;
-      
-      coinSe.play().catch(error => {
-        console.error('効果音の再生に失敗しました:', error);
-      });
+      playCoinSound();
     });
   </script>
 
