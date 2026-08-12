@@ -2,18 +2,27 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Drop-in-Coin</title>
 
-  <!-- ▼ 1. ブラウザタブ用 (Favicon) 設定追加 ▼ -->
+  <!-- ▼ ブラウザタブ用 (Favicon) 設定 ▼ -->
   <link rel="icon" href="icon.png" type="image/png">
   <link rel="shortcut icon" href="icon.png" type="image/png">
-  <!-- ▲ 1. ブラウザタブ用 (Favicon) 設定追加 ▲ -->
+  <!-- ▲ ブラウザタブ用 (Favicon) 設定 ▲ -->
 
-  <!-- ▼ 以前設定したホーム画面用 (apple-touch-icon) ▼ -->
+  <!-- ▼ ホーム画面用 (apple-touch-icon) ▼ -->
   <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
-  <!-- ▲ 以前設定したホーム画面用 (apple-touch-icon) ▲ -->
+  <!-- ▲ ホーム画面用 (apple-touch-icon) ▲ -->
+
+  <!-- ▼ PWA (ホーム画面から起動した際にアプリらしく表示) ▼ -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ドロップinコイン">
+  <!-- ▲ PWA設定 ▲ -->
 
   <style>
     /* 画面全体にGASアプリを隙間なく表示する設定 */
@@ -23,8 +32,18 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #ffffff;
+      background-color: #ffae19; /* ゲーム画面の背景色に合わせて、余白が目立たないようにする */
     }
+
+    body {
+      /* ▼ ノッチ／ダイナミックアイランド対応：Safe Area分だけ余白を確保 ▼ */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      box-sizing: border-box;
+    }
+
     iframe {
       width: 100%;
       height: 100%;
@@ -34,8 +53,18 @@
   </style>
 </head>
 <body>
-
   <!-- GASのWebアプリURL（画面全体に表示） -->
   <iframe src="https://script.google.com/macros/s/AKfycbxm5xAR-2qiSsSGMgKKUpvSUuJeo84_lWIgQU0wJQbB-v4iv0HPh22lciU9bK48YBcO/exec"></iframe>
 
+  <script>
+    // PWA: Service Workerを登録（トップレベルページで登録することが重要）
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js').catch(function (err) {
+          console.warn('Service Worker registration failed:', err);
+        });
+      });
+    }
+  </script>
 </body>
+</html>
