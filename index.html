@@ -2,95 +2,65 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BGM & 効果音 テスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Drop-in-Coin</title>
+
+  <!-- ▼ ブラウザタブ用 (Favicon) 設定 ▼ -->
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="shortcut icon" href="icon.png" type="image/png">
+  <!-- ▲ ブラウザタブ用 (Favicon) 設定 ▲ -->
+
+  <!-- ▼ ホーム画面用 (apple-touch-icon) ▼ -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+  <!-- ▲ ホーム画面用 (apple-touch-icon) ▲ -->
+
+  <!-- ▼ PWA (ホーム画面から起動した際にアプリらしく表示) ▼ -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ドロップinコイン">
+  <!-- ▲ PWA設定 ▲ -->
+
   <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+    /* 画面全体にGASアプリを隙間なく表示する設定 */
+    html, body {
       margin: 0;
-      gap: 20px;
-      background-color: #f4f4f4;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: #ffae19; /* ゲーム画面の背景色に合わせて、余白が目立たないようにする */
     }
-    button {
-      font-size: 18px;
-      padding: 12px 24px;
+
+    /* ▼ Safe Area（ノッチ／ホームバー避け）は内側のGASアプリ側(#app)で
+       既に処理しているため、ここでは追加のpaddingを入れない
+       （二重に余白を入れると上下にオレンジの帯が見えてしまう） ▼ */
+
+    iframe {
+      width: 100%;
+      height: 100%;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    #start-btn {
-      background-color: #4CAF50;
-      color: white;
-    }
-    #start-btn:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
-    #coin-btn {
-      background-color: #FFC107;
-      color: #333;
+      display: block;
     }
   </style>
 </head>
 <body>
-
-  <h1>Webゲーム画面</h1>
-  
-  <!-- ボタン領域 -->
-  <button id="start-btn">ゲームスタート（BGM再生）</button>
-  <button id="coin-btn">コインを落とす（効果音）</button>
+  <!-- GASのWebアプリURL（画面全体に表示） -->
+  <iframe src="https://script.google.com/macros/s/AKfycbxm5xAR-2qiSsSGMgKKUpvSUuJeo84_lWIgQU0wJQbB-v4iv0HPh22lciU9bK48YBcO/exec"></iframe>
 
   <script>
-    // --------------------------------------------------
-    // 1. 音声ファイルの読み込み設定
-    // ※ GitHub上のファイル名（大文字・小文字）と正確に合わせてください
-    // ※ パスの先頭に "/" はつけないでください（例: 'bgm.mp3' や './bgm.mp3'）
-    // --------------------------------------------------
-    const bgm = new Audio('bgm.mp3');
-    const coinSe = new Audio('coin.mp3'); // 効果音のファイル名に合わせて変更してください
-
-    // BGMのループ再生を有効化
-    bgm.loop = true;
-
-    // --------------------------------------------------
-    // 2. HTML要素の取得
-    // --------------------------------------------------
-    const startBtn = document.getElementById('start-btn');
-    const coinBtn = document.getElementById('coin-btn');
-
-    // --------------------------------------------------
-    // 3. スタートボタンを押したときの処理（BGMの再生）
-    // --------------------------------------------------
-    startBtn.addEventListener('click', () => {
-      // ブラウザの自動再生規制を回避するため、クリックイベント内でplay()を実行
-      bgm.play().then(() => {
-        console.log('BGMの再生を開始しました');
-        startBtn.textContent = '再生中…';
-        startBtn.disabled = true; // 二重再生防止のためボタンを無効化
-      }).catch(error => {
-        console.error('BGMの再生に失敗しました:', error);
-        alert('BGMが見つからないか、再生できませんでした。ファイル名や配置場所を確認してください。');
+    // PWA: Service Workerを登録（トップレベルページで登録することが重要）
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js').catch(function (err) {
+          console.warn('Service Worker registration failed:', err);
+        });
       });
-    });
-
-    // --------------------------------------------------
-    // 4. コインボタンを押したときの処理（効果音の再生）
-    // --------------------------------------------------
-    coinBtn.addEventListener('click', () => {
-      // 連続で押された場合も最初から再生し直す（再生位置をリセット）
-      coinSe.currentTime = 0;
-      
-      coinSe.play().catch(error => {
-        console.error('効果音の再生に失敗しました:', error);
-      });
-    });
+    }
   </script>
-
 </body>
 </html>
