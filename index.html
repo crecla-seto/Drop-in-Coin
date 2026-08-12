@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>あつまれ！マネーバンク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-main: #ffe259;
+    --bg-game-wrap: #fff5f8;
+    --pane-bg: rgba(255, 255, 255, 0.92);
+    --text-main: #2c586e;
+    --text-sub: #6fa0b8;
+    --color-primary: #ff529a;
+    --color-primary-dark: #d8236d;
+    --color-secondary: #ffda6a;
+    --color-line: #b2d7e8;
+    --pig-pink: #ffb6c1;
+    --pig-dark: #e68a9a;
+    --ink: #333;
+    --danger: #ff6b6b;
+    --white: #fff;
+  }
+  
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: #ffae19;
+    color: var(--text-main);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 700;
+    overscroll-behavior:none;
+    touch-action:none;
+    user-select:none;
+  }
+  
+  #app{
+    max-width:460px; margin:0 auto; min-height:100vh;
+    display:flex; flex-direction:column;
+    background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
+    position:relative; overflow:hidden;
+    padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);
+  }
+
+  .screen{ flex:1; display:flex; flex-direction:column; padding:16px; z-index: 2; position: relative;}
+  .hidden{ display:none !important; }
+
+  /* ---------------- OP SCREEN SPECIFIC ---------------- */
+  #screen-start {
+    padding: 12px 16px 20px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sunburst-bg {
+    position: absolute; inset: -50%;
+    background: repeating-conic-gradient(
+      from 0deg,
+      #ffda53 0deg 15deg,
+      #ffc72c 15deg 30deg
+    );
+    animation: rotateBg 60s linear infinite;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.85;
+  }
+  @keyframes rotateBg {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .op-hero-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    margin: 2px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-aura {
+    position: absolute;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,230,100,0.8) 50%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    animation: pulseAura 2s ease-in-out infinite alternate;
+  }
+  @keyframes pulseAura {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    100% { transform: scale(1.2); opacity: 1; }
+  }
+
+  .sparkle {
+    position: absolute; color: #fff; font-size: 20px;
+    text-shadow: 0 0 8px #ffeb3b; animation: floatSparkle 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes floatSparkle {
+    from { transform: translateY(0px) scale(0.8); }
+    to { transform: translateY(-6px) scale(1.2); }
+  }
+
+  .op-title-wrap {
+    text-align: center;
+    z-index: 3;
+    margin-top: 2px;
+  }
+  .op-title-sub {
+    font-family: 'Mochiy Pop One', sans-serif;
+    font-size: 13px; color: #fff;
+    background: #ff529a; padding: 4px 14px; border-radius: 20px;
+    display: inline-block; box-shadow: 0 3px 0 #d8236d, 0 2px 8px rgba(0,0,0,0.15);
+    transform: rotate(-2deg); margin-bottom: 2px;
+  }
+  h1.op-title-main {
+    font-family: 'Mochiy Pop One', sans-serif;
+    font-size: 34px; line-height: 1.15; margin: 4px 0;
+    color: #ffda6a;
+    text-shadow: 
+      3px 3px 0 #e64a19,
+      -3px -3px 0 #e64a19,
+      3px -3px 0 #e64a19,
+      -3px 3px 0 #e64a19,
+      0 6px 0 #900;
+    -webkit-text-stroke: 2px #ffffff;
+    letter-spacing: 0.02em;
+  }
+
+  .op-controls-panel {
+    width: 100%; z-index: 3;
+    background: rgba(255,255,255,0.92);
+    border: 4px solid #fff;
+    border-radius: 24px; padding: 12px 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  }
+
+  /* ---------------- UI COMPONENTS ---------------- */
+  .name-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background: #fff; border: 2px solid var(--color-line);
+    border-radius:16px; padding:8px 12px; margin: 4px 0;
+  }
+  .name-row .label{ font-size:10px; color: var(--text-sub); font-weight: 700;}
+  .name-row .value{ font-weight:900; font-size:15px; color: var(--text-main);}
+  .link-btn{ background: var(--color-primary); border:none; color:var(--white); font-size:11px; font-weight:900; padding:5px 12px; border-radius: 10px; cursor: pointer;}
+
+  .btn{
+    display:block; width:100%; text-align:center; border:none; cursor:pointer;
+    font-family: 'Mochiy Pop One', sans-serif; font-size:18px;
+    padding:14px; border-radius:25px; margin-top:8px;
+    transition: all 0.1s; text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+  }
+  .btn-primary{ 
+    background: var(--color-primary); color: var(--white); 
+    box-shadow: 0 6px 0 var(--color-primary-dark), 0 8px 15px rgba(0,0,0,0.15);
+    border: 2px solid var(--color-primary-dark);
+  }
+  .btn-primary:active{ transform:translateY(3px); box-shadow: 0 3px 0 var(--color-primary-dark); }
+  
+  .btn-secondary{ 
+    background: var(--white); color: var(--text-main); 
+    border:3px solid var(--color-line); box-shadow: 0 4px 0 var(--color-line);
+    font-family: 'Zen Maru Gothic', sans-serif; font-weight: 900;
+  }
+  .btn-secondary:active{ transform:translateY(2px); box-shadow: 0 2px 0 var(--color-line); }
+  .btn-ghost{ background:transparent; color: var(--text-sub); font-weight:700; text-decoration:underline; padding:6px; font-size: 12px;}
+
+  /* GAME SCREEN */
+  #screen-game{ padding:12px; background: var(--bg-main);}
+  .hud{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; background: var(--pane-bg); padding: 8px 16px; border-radius: 20px; border: 3px solid var(--white);}
+  .hud .score-block .eyebrow{ font-size: 11px; margin-bottom:0;}
+  
+  .register{
+    font-family: 'Mochiy Pop One', sans-serif; font-size:24px; color: var(--color-primary);
+    text-shadow: 1px 1px 0 #fff, 2px 2px 0 var(--color-primary-dark);
+    -webkit-text-stroke: 0.5px var(--color-primary-dark);
+  }
+  .best-block{ text-align:right; }
+  .best-block .val{ font-weight:900; font-size:14px; color: var(--text-sub);}
+  
+  .hud-right{ display:flex; flex-direction:row; align-items:center; gap:6px;}
+  .icon-btn{ background: var(--white); border:3px solid var(--color-line); color: var(--text-sub); border-radius:14px; width:36px; height:36px; font-size:16px; font-weight: 900; cursor: pointer;}
+
+  .next-row{ display:flex; align-items:center; gap:10px; margin-bottom:6px; background: rgba(255,255,255,0.85); padding: 4px 12px; border-radius: 16px;}
+  #next-coin-canvas{ width:36px; height:36px; }
+
+  #bank-frame{
+    position: relative; width: 100%;
+    padding: 12px 10px 18px 10px;
+    background: var(--pig-pink);
+    border: 6px solid #fff;
+    border-radius: 36px;
+    box-shadow: 0 10px 0 var(--pig-dark), 0 12px 20px rgba(0,0,0,0.12);
+  }
+
+  #bank-frame::before, #bank-frame::after {
+    content: ''; position: absolute; top: -14px; width: 36px; height: 28px;
+    background: var(--pig-pink); border: 4px solid #fff; border-radius: 12px 12px 0 0;
+    z-index: -1;
+  }
+  #bank-frame::before { left: 24px; transform: rotate(-20deg); }
+  #bank-frame::after { right: 24px; transform: rotate(20deg); }
+
+  .slot-label{
+    text-align: center; font-family: 'Mochiy Pop One', sans-serif; font-size: 10px;
+    color: #fff; margin-bottom: 4px; text-shadow: 0 1px 2px var(--pig-dark);
+  }
+  .coin-slot{
+    width: 120px; height: 8px; background: #8e4252; margin: 0 auto 8px;
+    border-radius: 4px; border: 2px solid #fff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+  }
+
+  #canvas-wrap{
+    position:relative; width:100%; aspect-ratio:360/540; border-radius:20px; overflow:hidden;
+    background: var(--bg-game-wrap);
+    box-shadow: inset 0 0 20px rgba(255, 182, 193, 0.4);
+    border: 4px solid #ffdae0;
+  }
+  #gameCanvas{ width:100%; height:100%; display:block; touch-action:none; }
+
+  .hint{ text-align:center; font-size:12px; color: #8d5600; margin-top:6px; font-weight: 700;}
+
+  /* OVERLAY */
+  .overlay{
+    position:absolute; inset:0; background: rgba(44, 88, 110, 0.88);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px; text-align:center; z-index:20; backdrop-filter: blur(3px);
+  }
+  .stamp{
+    font-family: 'Mochiy Pop One', sans-serif; font-size:30px; color: var(--white);
+    background: var(--danger); border-radius:20px; padding:8px 22px; transform:rotate(-4deg);
+    margin-bottom:16px; box-shadow: 0 6px 0 #c1453a; border: 3px solid var(--white);
+  }
+  .final-score{ font-family: 'Mochiy Pop One', sans-serif; font-size:40px; color: var(--color-secondary); text-shadow: 0 0 10px rgba(255,218,106,0.8); margin-bottom:4px; -webkit-text-stroke: 1px #b8952c;}
+  .final-label{ font-size:13px; color: rgba(255,255,255,0.8); font-weight:700; margin-bottom:20px;}
+  .badge-best{ background: var(--color-secondary); color: var(--ink); font-weight:900; font-size:13px; padding:6px 14px; border-radius:20px; margin-bottom:16px; box-shadow: 0 4px 0 #b8952c;}
+  .overlay .btn{ max-width:260px; }
+
+  .modal-bg{ position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px; backdrop-filter: blur(2px);}
+  .modal-card{ background: var(--white); color: var(--ink); border-radius:24px; padding:22px; width:100%; max-width:340px; box-shadow: 0 12px 28px rgba(0,0,0,0.15);}
+  .modal-card h3{ font-family: 'Mochiy Pop One', sans-serif; margin:0 0 8px; font-size:18px; color: var(--text-main);}
+  .modal-card p{ font-size:12px; color: var(--text-sub); margin:0 0 14px; font-weight: 700; line-height: 1.4;}
+  .modal-card input{
+    width:100%; padding:12px 14px; border-radius:14px; border:3px solid var(--color-line);
+    font-size:15px; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; background: #fdfdfd; color: var(--ink);
+  }
+  .modal-card input:focus{ outline: none; border-color: var(--color-primary); }
+  .modal-card .btn-primary{ margin-top:16px;}
+
+  /* RANKING */
+  #screen-ranking{ background: var(--bg-main); }
+  #screen-ranking .month{ font-family: 'Mochiy Pop One', sans-serif; font-size:22px; color: var(--white); margin-bottom:4px; text-shadow: 2px 2px 0 var(--color-primary-dark);}
+  #screen-ranking .sub{ font-size:11px; color: var(--white); margin-bottom:16px; font-weight: 700; opacity: 0.9;}
+  .rank-list{ display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-bottom:8px;}
+  .rank-row{
+    display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:16px;
+    background: var(--pane-bg); border:3px solid var(--white); box-shadow: 0 4px 0 rgba(0,0,0,0.03);
+  }
+  .rank-row.top1{ background: linear-gradient(135deg, #fff 0%, var(--bg-game-wrap) 100%); border-color: var(--color-secondary); box-shadow: 0 5px 0 #e6c65c;}
+  .rank-row.top2{ border-color: #d0d0d0; box-shadow: 0 4px 0 #b0b0b0;}
+  .rank-row.top3{ border-color: #eac975; box-shadow: 0 4px 0 #c9a63e;}
+  .rank-row.me{ outline:3px solid var(--color-primary); outline-offset: -3px;}
+  
+  .rank-num{ font-family: 'Mochiy Pop One', sans-serif; font-size:16px; width:26px; text-align:center; color: var(--text-sub);}
+  .rank-row.top1 .rank-num{ color: var(--color-secondary); font-size:22px; text-shadow: 1px 1px 0 #b8952c;}
+  .rank-name{ flex:1; font-size:14px; font-weight:900; color: var(--text-main);}
+  .rank-score{ font-weight:900; font-size:15px; color: var(--color-primary);}
+  
+  .empty-rank{ text-align:center; color: var(--white); font-size:13px; margin-top:30px; line-height:1.8; font-weight: 700; background: rgba(0,0,0,0.15); padding: 16px; border-radius: 18px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- START SCREEN -->
+  <section id="screen-start" class="screen">
+    <div class="sunburst-bg"></div>
+
+    <div class="op-title-wrap">
+      <div class="op-title-sub">★ お金をあつめて合体！ ★</div>
+      <h1 class="op-title-main">マネーバンク</h1>
+    </div>
+
+    <!-- メインキャラ＆全キャラ表示キャンバス -->
+    <div class="op-hero-container">
+      <div class="hero-aura"></div>
+      <div class="sparkle" style="top:5px; left:15px;">✦</div>
+      <div class="sparkle" style="top:25px; right:20px; animation-delay: 0.5s;">★</div>
+      <div class="sparkle" style="bottom:10px; left:25px; animation-delay: 0.8s;">✦</div>
+      <canvas id="opHeroCanvas" width="360" height="300" style="position:relative; z-index:2;"></canvas>
+    </div>
+
+    <!-- 下部設定 & ボタン -->
+    <div class="op-controls-panel">
+      <div class="name-row">
+        <div>
+          <div class="label">プレイヤー名</div>
+          <div class="value" id="start-name-display">プレイヤー</div>
+        </div>
+        <button class="link-btn" id="btn-edit-name">変更</button>
+      </div>
+
+      <div class="name-row" id="sync-row" style="padding: 6px 12px; margin-top: 4px; background: #fdfdfd;">
+        <div>
+          <div class="label" style="font-size: 9px;">同期コード</div>
+          <div class="value" id="sync-code-display" style="font-size: 12px;">未設定</div>
+        </div>
+        <button class="link-btn" id="btn-open-sync" style="font-size: 10px; padding: 3px 8px;">設定</button>
+      </div>
+
+      <button class="btn btn-primary" id="btn-start">ゲームスタート！</button>
+      <button class="btn btn-secondary" id="btn-show-ranking" style="margin-top: 6px;">ランキングを見る</button>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="screen-game" class="screen hidden">
+    <div class="hud">
+      <div class="score-block">
+        <div class="eyebrow">あつまった総資産</div>
+        <div class="register" id="score-display">¥0</div>
+      </div>
+      <div class="hud-right">
+        <div class="best-block"><span class="eyebrow">BEST</span><div class="val" id="best-display">¥0</div></div>
+        <button class="icon-btn" id="btn-audio">🔊</button>
+        <button class="icon-btn" id="btn-pause">‖</button>
+      </div>
+    </div>
+
+    <div class="next-row">
+      <span class="eyebrow" style="color: var(--text-main); font-size: 12px;">つぎはこれ：</span>
+      <canvas id="next-coin-canvas" width="40" height="40"></canvas>
+    </div>
+
+    <!-- 豚の貯金箱風フレーム -->
+    <div id="bank-frame">
+      <div class="slot-label">PIGGY BANK</div>
+      <div class="coin-slot"></div>
+      <div id="canvas-wrap">
+        <canvas id="gameCanvas" width="360" height="540"></canvas>
+
+        <div class="overlay hidden" id="overlay-gameover">
+          <div class="stamp">GAME OVER</div>
+          <div class="final-score" id="final-score">¥0</div>
+          <div class="final-label">今回のきろく</div>
+          <div class="badge-best hidden" id="badge-best">自己ベスト更新！やったね！</div>
+          <button class="btn btn-primary" id="btn-retry">もう一度あそぶ</button>
+          <button class="btn btn-secondary" id="btn-goto-ranking">ランキングをみる</button>
+          <button class="btn btn-ghost" id="btn-goto-title" style="color: rgba(255,255,255,0.8);">タイトルへもどる</button>
+        </div>
+
+        <div class="overlay hidden" id="overlay-pause">
+          <div class="eyebrow" style="margin-bottom:16px; color: var(--color-secondary); font-size: 18px;">たんぽれーず (PAUSED)</div>
+          <button class="btn btn-primary" id="btn-resume">つづける</button>
+          <button class="btn btn-secondary" id="btn-pause-ranking">ランキングをみる</button>
+          <button class="btn btn-ghost" id="btn-pause-quit" style="color: rgba(255,255,255,0.8);">タイトルへもどる</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint">スライドして投入口からコインを落としてね！</div>
+  </section>
+
+  <!-- RANKING SCREEN -->
+  <section id="screen-ranking" class="screen hidden">
+    <div class="eyebrow" style="color: var(--white); text-shadow: 1px 1px 0 var(--text-main);">MONTHLY RANKING</div>
+    <div class="month" id="ranking-month">-</div>
+    <div class="sub">※毎月1日にリセットされます</div>
+    <div class="rank-list" id="rank-list"></div>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary" id="btn-ranking-back">もどる</button>
+  </section>
+
+  <!-- NAME MODAL -->
+  <div class="modal-bg hidden" id="modal-name">
+    <div class="modal-card">
+      <h3>プレイヤーのなまえ</h3>
+      <p>ランキングにのる名前だよ（8文字まで）</p>
+      <input type="text" id="input-name" maxlength="8" placeholder="例）マネーちゃん">
+      <button class="btn btn-primary" id="btn-save-name">きめた！</button>
+    </div>
+  </div>
+  
+  <!-- SYNC MODAL -->
+  <div class="modal-bg hidden" id="modal-sync">
+    <div class="modal-card">
+      <h3>ほかの端末と同期</h3>
+      <p>名前と自己ベストを共有できます。</p>
+      <div style="margin-bottom:12px; background: #f0f8ff; padding: 10px; border-radius: 12px; border: 2px solid var(--color-line);">
+        <div style="font-size:11px;color:var(--text-sub);margin-bottom:2px; font-weight: 700;">この端末のコード</div>
+        <div id="modal-sync-current" style="font-family:monospace;font-size:20px;font-weight:900;letter-spacing:0.1em;color:var(--color-primary-dark); text-align: center;">------</div>
+      </div>
+      <button class="btn btn-secondary" id="btn-sync-generate" style="margin-top:0; font-size: 12px; padding: 8px;">新しいコードを発行する</button>
+      <p style="margin-top:14px;margin-bottom:6px; color: var(--text-main);">ほかの端末のコードを入力：</p>
+      <input type="text" id="input-sync-code" maxlength="8" placeholder="例）AB3F9K" style="text-transform:uppercase; text-align: center; font-family: monospace;">
+      <button class="btn btn-primary" id="btn-sync-link" style="font-size: 15px; padding: 12px;">このコードで同期する</button>
+      <button class="btn btn-ghost" id="btn-sync-close">閉じる</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- WEB AUDIO (BGM & SE) ---------- */
+  var audioCtx = null;
+  var isMuted = false;
+  var bgmTimer = null;
+
+  function initAudio() {
+    if(!audioCtx) {
+      var AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if(AudioCtx) audioCtx = new AudioCtx();
+    }
+    if(audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playSound(type) {
+    if(isMuted || !audioCtx) return;
+    try {
+      var now = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if(type === 'drop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.start(now); osc.stop(now + 0.12);
+      } 
+      else if(type === 'merge') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.06);
+        osc.frequency.setValueAtTime(783.99, now + 0.12);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now); osc.stop(now + 0.25);
+      }
+      else if(type === 'gameover') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+      }
+    } catch(e){}
+  }
+
+  function startBGM() {
+    stopBGM();
+    if(isMuted) return;
+    var notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
+    var step = 0;
+    bgmTimer = setInterval(function(){
+      if(isMuted || !audioCtx || audioCtx.state !== 'running') return;
+      try {
+        var now = audioCtx.currentTime;
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(notes[step % notes.length], now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 0.18);
+        step++;
+      } catch(e){}
+    }, 220);
+  }
+
+  function stopBGM() {
+    if(bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
+  }
+
+  /* ---------- TIER DEFINITIONS ---------- */
+  var TIERS = [
+    { name:"1円",      disp:"1",      value:1,         radius:22, bg:"#efefef", border:"#b5b5b5", text:"#404040", faceType:0 },  // 赤ちゃん
+    { name:"5円",      disp:"5",      value:5,         radius:26, bg:"#fcd868", border:"#c79f22", text:"#543f03", faceType:1 },  // 子供
+    { name:"50円",     disp:"50",     value:50,        radius:30, bg:"#d3e3f5", border:"#819ebf", text:"#1f3652", faceType:2 },  // メガネっ子
+    { name:"100円",    disp:"100",    value:100,       radius:34, bg:"#e0e0e0", border:"#999999", text:"#292929", faceType:3 },  // クール/真面目
+    { name:"500円",    disp:"500",    value:500,       radius:39, bg:"#ffd863", border:"#ba9018", text:"#4a3701", faceType:4 },  // お兄さん/ウインク
+    { name:"1000円",   disp:"1千",    value:1000,      radius:45, bg:"#8de3a6", border:"#3db560", text:"#084218", faceType:5 },  // ビジネスマン/髭
+    { name:"1万円",    disp:"1万",    value:10000,     radius:51, bg:"#f5b3e5", border:"#bd5cb0", text:"#4d0b44", faceType:6 },  // ヤンキー
+    { name:"10万円",   disp:"10万",   value:100000,    radius:58, bg:"#7bd5f5", border:"#2b9bc4", text:"#053f54", faceType:7 },  // セレブ
+    { name:"100万円",  disp:"100万",  value:1000000,   radius:65, bg:"#ff8e8e", border:"#d43d3d", text:"#520909", faceType:8 },  // 富豪
+    { name:"1000万円", disp:"1000万", value:10000000,  radius:73, bg:"#f0e5c9", border:"#b59e67", text:"#453818", faceType:9 },  // 王様
+    { name:"1億円",    disp:"1億",    value:100000000, radius:82, bg:"#ffe054", border:"#d19f00", text:"#473200", faceType:10 }  // 仙人
+  ];
+
+  var WIDTH=360, HEIGHT=540, WALL=12, DANGER_Y=100, DROP_Y=60;
+
+  var API_URL = "";
+  function useGas(){ return typeof API_URL === "string" && API_URL.indexOf("https://") === 0; }
+  async function gasGet(action, params){
+    var qs = Object.keys(params||{}).map(function(k){ return encodeURIComponent(k)+"="+encodeURIComponent(params[k]==null?"":params[k]); }).join("&");
+    var url = API_URL + "?action=" + encodeURIComponent(action) + (qs ? ("&"+qs) : "");
+    var res = await fetch(url); return await res.json();
+  }
+  async function gasPost(action, payload){
+    payload = payload || {}; payload.action = action;
+    var res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+    return await res.json();
+  }
+
+  /* ---------- STATE ---------- */
+  var playerName = "プレイヤー";
+  var bestScore = 0;
+  var syncCode = null;
+  var score = 0;
+  var currentTier, nextTier;
+  var aiming=false, aimX=WIDTH/2, canDrop=true, isGameOver=false, isPaused=false;
+  var lastDropTime=0, dangerTimer=0, lastFrameTime=0;
+  var floaters=[]; 
+  var pendingRemovals=[];
+  var nameEditReturnsTo = null;
+  var engine, world;
+  var opAnimFrame = null;
+
+  /* ---------- STORAGE HELPERS ---------- */
+  function monthKey(){ var d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+  function monthLabel(){ var d = new Date(); return d.getFullYear()+"年"+(d.getMonth()+1)+"月"; }
+  async function storageGet(key, shared){ try{ var r = await window.storage.get(key, !!shared); return r ? r.value : null; }catch(e){ return null; } }
+  async function storageSet(key, value, shared){ try{ await window.storage.set(key, value, !!shared); }catch(e){} }
+  async function loadBest(){ var v = await storageGet("best-score", false); return v ? (parseInt(v,10) || 0) : 0; }
+  async function saveBest(v){ await storageSet("best-score", String(v), false); }
+  
+  async function loadLeaderboard(key){
+    if(useGas()){ try{ var list = await gasGet("getRanking", { month:key }); return Array.isArray(list) ? list : []; }catch(e){ return []; } }
+    var v = await storageGet("leaderboard:"+key, true); if(!v) return [];
+    try{ var list2 = JSON.parse(v); return Array.isArray(list2) ? list2 : []; }catch(e){ return []; }
+  }
+  async function pushToLeaderboard(name, finalScore){
+    var key = monthKey();
+    if(useGas()){ try{ var d = await gasPost("submitScore", { month:key, name:name, score:finalScore }); return d.ranking || []; }catch(e){ return []; } }
+    var list = await loadLeaderboard(key);
+    list.push({ name:name, score:finalScore, ts:Date.now() });
+    list.sort(function(a,b){ return b.score - a.score; });
+    list = list.slice(0,100);
+    await storageSet("leaderboard:"+key, JSON.stringify(list), true);
+    return list;
+  }
+
+  /* ---------- SYNC ---------- */
+  function genSyncCode(){
+    var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; var code = "";
+    for(var i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+    return code;
+  }
+  async function pushSyncData(){
+    if(!syncCode) return;
+    if(useGas()){ try{ await gasPost("savePlayer", { code:syncCode, name:playerName, bestScore:bestScore }); }catch(e){} return; }
+    await storageSet("playerdata:"+syncCode, JSON.stringify({ name:playerName, bestScore:bestScore }), true);
+  }
+  async function applySyncCode(code, isNew){
+    syncCode = code; await storageSet("sync-code", code, false);
+    if(!isNew){
+      try{
+        var d; if(useGas()){ d = await gasGet("getPlayer", { code:code }); }
+        else { var raw = await storageGet("playerdata:"+code, true); d = raw ? JSON.parse(raw) : null; }
+        if(d){ if(d.name) playerName = d.name; if(typeof d.bestScore === "number") bestScore = Math.max(bestScore, d.bestScore); }
+      }catch(e){}
+    }
+    await storageSet("player-name", playerName, false); await saveBest(bestScore); await pushSyncData();
+    refreshIdentityUI();
+  }
+  function refreshIdentityUI(){
+    $("start-name-display").textContent = playerName; updateBestUI();
+    $("sync-code-display").textContent = syncCode || "未設定";
+    $("modal-sync-current").textContent = syncCode || "------";
+  }
+
+  /* ---------- DOM ---------- */
+  var $ = function(id){ return document.getElementById(id); };
+  var screenStart = $("screen-start"), screenGame=$("screen-game"), screenRanking=$("screen-ranking");
+  var canvas = $("gameCanvas"), ctx = canvas.getContext("2d");
+  var nextCanvas = $("next-coin-canvas"), nextCtx = nextCanvas.getContext("2d");
+  var opCanvas = $("opHeroCanvas"), opCtx = opCanvas.getContext("2d");
+
+  function showScreen(el){ 
+    [screenStart, screenGame, screenRanking].forEach(function(s){ s.classList.add("hidden"); }); 
+    el.classList.remove("hidden");
+    if(el === screenGame) { stopOpAnimation(); startBGM(); } 
+    else if(el === screenStart) { stopBGM(); startOpAnimation(); }
+    else { stopBGM(); stopOpAnimation(); }
+  }
+  function fmtYen(n){ return "¥" + Math.round(n).toLocaleString("ja-JP"); }
+
+  function updateScoreUI(){ $("score-display").textContent = fmtYen(score); }
+  function updateBestUI(){ $("best-display").textContent = fmtYen(bestScore); }
+  
+  function updateNextPreviewUI(){
+    nextCtx.clearRect(0,0,40,40);
+    drawCoinCharacter(nextCtx, 20, 20, 0, nextTier, 18);
+  }
+
+  /* ---------- OPENING HERO ANIMATION (全キャラ全表示対応) ---------- */
+  // 全11体のキャラを画面内に収める配置設定 (全キャラクターが見えるようにスケールを自動微調整)
+  var opCoins = [
+    { tier: 10, x: 180, y: 145, r: 52, angle: 0, rotSpeed: 0.002, floatOffset: 0 },   // 1億円 (中央仙人)
+    { tier: 9,  x: 180, y: 52,  r: 38, angle: -0.05, floatOffset: 1 },               // 1000万 (上中央)
+    { tier: 8,  x: 80,  y: 110, r: 35, angle: -0.1, floatOffset: 0.5 },              // 100万 (左上)
+    { tier: 7,  x: 280, y: 110, r: 33, angle: 0.1, floatOffset: 1.5 },               // 10万 (右上)
+    { tier: 6,  x: 65,  y: 185, r: 31, angle: -0.15, floatOffset: 2 },               // 1万円 (左・ヤンキー)
+    { tier: 5,  x: 295, y: 185, r: 28, angle: 0.15, floatOffset: 2.5 },              // 1000円 (右)
+    { tier: 4,  x: 95,  y: 255, r: 25, angle: 0.05, floatOffset: 3 },                // 500円 (左下)
+    { tier: 3,  x: 265, y: 255, r: 23, angle: -0.05, floatOffset: 3.5 },              // 100円 (右下)
+    { tier: 2,  x: 180, y: 245, r: 21, angle: 0, floatOffset: 4 },                   // 50円 (下中央)
+    { tier: 1,  x: 135, y: 40,  r: 18, angle: -0.2, floatOffset: 1.2 },              // 5円 (上左)
+    { tier: 0,  x: 225, y: 40,  r: 16, angle: 0.2, floatOffset: 2.8 }                // 1円 (上右・赤ちゃん)
+  ];
+
+  function startOpAnimation(){
+    stopOpAnimation();
+    function anim(t){
+      opCtx.clearRect(0, 0, 360, 300);
+      
+      opCoins.forEach(function(c){
+        var floatY = Math.sin((t * 0.003) + c.floatOffset) * (c.tier === 10 ? 3 : 5);
+        c.angle += c.rotSpeed || 0;
+        drawCoinCharacter(opCtx, c.x, c.y + floatY, c.angle, c.tier, c.r);
+      });
+
+      opAnimFrame = requestAnimationFrame(anim);
+    }
+    opAnimFrame = requestAnimationFrame(anim);
+  }
+
+  function stopOpAnimation(){
+    if(opAnimFrame) { cancelAnimationFrame(opAnimFrame); opAnimFrame = null; }
+  }
+
+  /* AUDIO UI */
+  $("btn-audio").addEventListener("click", function(){
+    initAudio();
+    isMuted = !isMuted;
+    this.textContent = isMuted ? "🔇" : "🔊";
+    if(isMuted) stopBGM(); else startBGM();
+  });
+
+  /* ---------- NAME MODAL ---------- */
+  function openNameModal(returnTo){ nameEditReturnsTo = returnTo; $("input-name").value = (playerName === "プレイヤー" ? "" : playerName); $("modal-name").classList.remove("hidden"); setTimeout(function(){ $("input-name").focus(); }, 50); }
+  function closeNameModal(){ $("modal-name").classList.add("hidden"); }
+  $("btn-save-name").addEventListener("click", async function(){
+    initAudio();
+    var v = $("input-name").value.trim(); if(v.length === 0) v = "プレイヤー"; playerName = v.slice(0,8);
+    await storageSet("player-name", playerName, false); $("start-name-display").textContent = playerName;
+    await pushSyncData(); closeNameModal();
+    if(nameEditReturnsTo === "start-game"){ actuallyStartGame(); }
+  });
+  $("btn-edit-name").addEventListener("click", function(){ initAudio(); openNameModal(null); });
+
+  /* ---------- SYNC MODAL ---------- */
+  $("btn-open-sync").addEventListener("click", function(){ initAudio(); $("input-sync-code").value = ""; refreshIdentityUI(); $("modal-sync").classList.remove("hidden"); });
+  $("btn-sync-close").addEventListener("click", function(){ $("modal-sync").classList.add("hidden"); });
+  $("btn-sync-generate").addEventListener("click", async function(){ await applySyncCode(genSyncCode(), true); });
+  $("btn-sync-link").addEventListener("click", async function(){ var v = $("input-sync-code").value.trim().toUpperCase(); if(v){ await applySyncCode(v, false); $("modal-sync").classList.add("hidden"); } });
+
+  /* ---------- START SCREEN ---------- */
+  $("btn-start").addEventListener("click", function(){ initAudio(); if(!playerName || playerName === "プレイヤー"){ openNameModal("start-game"); } else { actuallyStartGame(); } });
+  $("btn-show-ranking").addEventListener("click", function(){ initAudio(); openRanking(); });
+  $("btn-ranking-back").addEventListener("click", function(){ initAudio(); if(!screenGame.classList.contains("hidden")){ showScreen(screenGame); } else { showScreen(screenStart); } });
+
+  /* ---------- RANKING ---------- */
+  async function openRanking(){
+    showScreen(screenRanking); var now = new Date(); $("ranking-month").textContent = monthLabel();
+    var list = await loadLeaderboard(monthKey()); var box = $("rank-list"); box.innerHTML = "";
+    if(list.length === 0){ box.innerHTML = '<div class="empty-rank">まだきろくがないよ。<br>さいしょのランカーになろう！</div>'; return; }
+    var justPlayedTs = window.__lastSubmitTs || 0;
+    list.slice(0,10).forEach(function(entry, i){
+      var row = document.createElement("div"); var cls = "rank-row";
+      if(i===0) cls += " top1"; else if(i===1) cls += " top2"; else if(i===2) cls += " top3";
+      if(entry.ts && Math.abs(entry.ts - justPlayedTs) < 2000) cls += " me";
+      row.className = cls;
+      var medal = i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1);
+      row.innerHTML = '<div class="rank-num">'+medal+'</div><div class="rank-name">'+escapeHtml(entry.name)+'</div><div class="rank-score">'+fmtYen(entry.score)+'</div>';
+      box.appendChild(row);
+    });
+  }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]; }); }
+
+  /* ---------- GAME LOGIC ---------- */
+  function randomStartTier(){ var r = Math.random(); if(r<0.25) return 0; if(r<0.50) return 1; if(r<0.70) return 2; if(r<0.90) return 3; return 4; }
+
+  function actuallyStartGame(){
+    score = 0; isGameOver=false; isPaused=false; dangerTimer=0; floaters=[]; updateScoreUI();
+    $("overlay-gameover").classList.add("hidden"); $("overlay-pause").classList.add("hidden");
+    currentTier = randomStartTier(); nextTier = randomStartTier(); updateNextPreviewUI();
+    setupPhysics(); showScreen(screenGame);
+    canDrop = true; aiming=false; lastFrameTime = performance.now(); requestAnimationFrame(loop);
+  }
+
+  function setupPhysics(){
+    if(engine){ Matter.World.clear(world, false); Matter.Engine.clear(engine); }
+    engine = Matter.Engine.create(); engine.gravity.y = 0.85; world = engine.world;
+    var ground = Matter.Bodies.rectangle(WIDTH/2, HEIGHT+15, WIDTH, 30, {isStatic:true, friction:0.6});
+    var wallL = Matter.Bodies.rectangle(-15, HEIGHT/2, 30, HEIGHT, {isStatic:true, friction:0.1});
+    var wallR = Matter.Bodies.rectangle(WIDTH+15, HEIGHT/2, 30, HEIGHT, {isStatic:true, friction:0.1});
+    Matter.World.add(world, [ground, wallL, wallR]);
+    Matter.Events.on(engine, "collisionStart", function(event){
+      event.pairs.forEach(function(pair){
+        var a = pair.bodyA, b = pair.bodyB;
+        if(a.tierIndex === undefined || b.tierIndex === undefined) return;
+        if(a.merging || b.merging) return;
+        if(a.tierIndex === b.tierIndex && a.tierIndex < TIERS.length - 1){
+          a.merging = true; b.merging = true; pendingRemovals.push({a:a, b:b});
+        }
+      });
+    });
+  }
+
+  function spawnCoin(x, y, tierIdx, vy){
+    var t = TIERS[tierIdx];
+    var body = Matter.Bodies.circle(x, y, t.radius, { restitution: 0.25, friction: 0.1, density: 0.01 });
+    body.tierIndex = tierIdx; body.spawnTime = performance.now();
+    if(vy) Matter.Body.setVelocity(body, {x:0, y:vy});
+    Matter.World.add(world, body); return body;
+  }
+
+  function processPendingMerges(){
+    if(pendingRemovals.length === 0) return;
+    var done = pendingRemovals; pendingRemovals = [];
+    done.forEach(function(pair){
+      var a = pair.a, b = pair.b;
+      if(!Matter.Composite.get(world, a.id, "body") || !Matter.Composite.get(world, b.id, "body")) return;
+      var tier = a.tierIndex;
+      var midX = (a.position.x + b.position.x)/2; var midY = (a.position.y + b.position.y)/2;
+      Matter.World.remove(world, a); Matter.World.remove(world, b);
+      var newTier = tier + 1;
+      var delta = TIERS[newTier].value - TIERS[tier].value * 2;
+      score += delta; updateScoreUI();
+      spawnCoin(midX, midY, newTier, -2.5);
+      playSound('merge');
+      floaters.push({ x:midX, y:midY, text:(delta>=0?"+":"")+fmtYen(delta), life:60, vy:-1, tier:newTier });
+      if(navigator.vibrate) navigator.vibrate(tier === TIERS.length-2 ? [50,30,50] : 15);
+    });
+  }
+
+  function checkGameOver(now){
+    if(isGameOver) return;
+    if(now - lastDropTime < 800) return;
+    var bodies = Matter.Composite.allBodies(world); var risky = false;
+    for(var i=0;i<bodies.length;i++){
+      var b = bodies[i]; if(b.tierIndex === undefined) continue;
+      if(b.position.y - TIERS[b.tierIndex].radius < DANGER_Y && (now - b.spawnTime) > 1000){ risky = true; break; }
+    }
+    if(risky){ dangerTimer += (now - lastFrameTime); if(dangerTimer > 1500) triggerGameOver(); }
+    else dangerTimer = 0;
+  }
+
+  async function triggerGameOver(){
+    isGameOver = true; stopBGM(); playSound('gameover');
+    $("final-score").textContent = fmtYen(score);
+    var isNewBest = score > bestScore;
+    if(isNewBest){ bestScore = score; await saveBest(bestScore); updateBestUI(); await pushSyncData(); }
+    $("badge-best").classList.toggle("hidden", !isNewBest);
+    $("overlay-gameover").classList.remove("hidden");
+    window.__lastSubmitTs = Date.now(); await pushToLeaderboard(playerName, score);
+  }
+
+  /* ---------- CONTROLS ---------- */
+  function localX(clientX){ var rect = canvas.getBoundingClientRect(); return (clientX - rect.left) * (WIDTH / rect.width); }
+  function clampAim(x){ var r = TIERS[currentTier].radius; return Math.max(WALL + r, Math.min(WIDTH - WALL - r, x)); }
+  canvas.addEventListener("pointerdown", function(e){ initAudio(); if(!canDrop || isGameOver || isPaused) return; aiming = true; aimX = clampAim(localX(e.clientX)); });
+  canvas.addEventListener("pointermove", function(e){ if(!aiming) return; aimX = clampAim(localX(e.clientX)); });
+  function releaseAim(){ if(!aiming) return; aiming = false; dropCoin(); }
+  canvas.addEventListener("pointerup", releaseAim); canvas.addEventListener("pointercancel", releaseAim);
+
+  function dropCoin(){
+    if(!canDrop || isGameOver || isPaused) return;
+    canDrop = false; spawnCoin(aimX, DROP_Y, currentTier, 0);
+    playSound('drop');
+    score += TIERS[currentTier].value; updateScoreUI();
+    lastDropTime = performance.now();
+    currentTier = nextTier; nextTier = randomStartTier(); updateNextPreviewUI();
+    setTimeout(function(){ canDrop = true; }, 400);
+  }
+
+  /* ---------- DRAW COIN CHARACTER (全キャラクター特徴付け) ---------- */
+  function drawCoinCharacter(c, x, y, angle, tierIdx, overrideRadius){
+    var t = TIERS[tierIdx];
+    var r = overrideRadius || t.radius;
+    
+    c.save();
+    c.translate(x, y);
+    c.rotate(angle);
+
+    // ベースコイン描画
+    var grad = c.createRadialGradient(-r*0.3, -r*0.3, r*0.1, 0, 0, r);
+    grad.addColorStop(0, "#ffffff");
+    grad.addColorStop(0.4, t.bg);
+    grad.addColorStop(1, t.border);
+
+    c.beginPath(); c.arc(0, 0, r, 0, Math.PI*2);
+    c.fillStyle = grad; c.fill();
+
+    c.lineWidth = Math.max(2, r * 0.08);
+    c.strokeStyle = t.border; c.stroke();
+
+    // 光沢ハイライト
+    c.beginPath(); c.arc(0, 0, r * 0.82, Math.PI * 1.25, Math.PI * 1.75);
+    c.lineWidth = Math.max(1.5, r * 0.06);
+    c.strokeStyle = "rgba(255, 255, 255, 0.7)"; c.stroke();
+
+    // 金額テキスト
+    c.save();
+    var fontSize = Math.floor(r * (t.disp.length > 3 ? 0.38 : 0.48));
+    c.font = "900 " + fontSize + "px 'Mochiy Pop One', sans-serif";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    var textY = -r * 0.28;
+
+    c.lineWidth = Math.max(3, fontSize * 0.25);
+    c.strokeStyle = "#ffffff"; c.strokeText(t.disp, 0, textY);
+    c.fillStyle = t.text; c.fillText(t.disp, 0, textY);
+    c.restore();
+
+    // 頬の赤み
+    var faceY = r * 0.28;
+    var eyeOffset = r * 0.32;
+    var eyeRadius = Math.max(1.5, r * 0.08);
+
+    c.fillStyle = "rgba(255, 120, 150, 0.4)";
+    c.beginPath(); c.arc(-eyeOffset*1.15, faceY + r*0.05, r*0.13, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(eyeOffset*1.15, faceY + r*0.05, r*0.13, 0, Math.PI*2); c.fill();
+
+    c.fillStyle = "#222222"; c.strokeStyle = "#222222";
+    c.lineWidth = Math.max(1.5, r * 0.06); c.lineCap = "round"; c.lineJoin = "round";
+
+    // --- キャラクター別パーツ ---
+    
+    // 0: 1円【赤ちゃん】(大目とうるうる光、おしゃぶり)
+    if(t.faceType === 0) {
+      c.beginPath(); c.arc(-eyeOffset, faceY - r*0.02, eyeRadius*1.5, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY - r*0.02, eyeRadius*1.5, 0, Math.PI*2); c.fill();
+      // 目のハイライト
+      c.fillStyle = "#ffffff";
+      c.beginPath(); c.arc(-eyeOffset - r*0.04, faceY - r*0.06, eyeRadius*0.6, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset - r*0.04, faceY - r*0.06, eyeRadius*0.6, 0, Math.PI*2); c.fill();
+      // おしゃぶり
+      c.fillStyle = "#ff69b4";
+      c.beginPath(); c.arc(0, faceY + r*0.12, r*0.14, 0, Math.PI*2); c.fill();
+      c.strokeStyle = "#ffffff"; c.lineWidth = Math.max(1, r*0.04);
+      c.beginPath(); c.arc(0, faceY + r*0.12, r*0.07, 0, Math.PI*2); c.stroke();
+    } 
+    // 1: 5円【子供】(くりくり目、ニッコリ口)
+    else if(t.faceType === 1) {
+      c.beginPath(); c.arc(-eyeOffset, faceY, eyeRadius*1.2, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY, eyeRadius*1.2, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(0, faceY + r*0.02, r*0.14, 0, Math.PI); c.fill();
+    }
+    // 2: 50円【メガネっ子】(丸メガネ)
+    else if(t.faceType === 2) {
+      c.beginPath(); c.arc(-eyeOffset, faceY, eyeRadius, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY, eyeRadius, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(0, faceY + r*0.05, r*0.1, 0, Math.PI); c.stroke();
+      // 丸メガネフレーム
+      c.strokeStyle = "#2f4f4f"; c.lineWidth = Math.max(1.5, r*0.05);
+      c.beginPath(); c.arc(-eyeOffset, faceY, r*0.18, 0, Math.PI*2); c.stroke();
+      c.beginPath(); c.arc(eyeOffset, faceY, r*0.18, 0, Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(-eyeOffset + r*0.18, faceY); c.lineTo(eyeOffset - r*0.18, faceY); c.stroke();
+    }
+    // 3: 100円【真面目/クール】(キリリ眉毛)
+    else if(t.faceType === 3) {
+      c.beginPath(); c.arc(-eyeOffset, faceY + r*0.02, eyeRadius, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY + r*0.02, eyeRadius, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.moveTo(-r*0.1, faceY + r*0.1); c.lineTo(r*0.1, faceY + r*0.1); c.stroke();
+      // キリッと眉毛
+      c.beginPath(); c.moveTo(-eyeOffset - r*0.1, faceY - r*0.1); c.lineTo(-eyeOffset + r*0.08, faceY - r*0.04); c.stroke();
+      c.beginPath(); c.moveTo(eyeOffset + r*0.1, faceY - r*0.1); c.lineTo(eyeOffset - r*0.08, faceY - r*0.04); c.stroke();
+    }
+    // 4: 500円【お兄さん】(ウインク＋スマイル)
+    else if(t.faceType === 4) {
+      c.beginPath();
+      c.moveTo(-eyeOffset - r*0.08, faceY - r*0.04);
+      c.lineTo(-eyeOffset, faceY + r*0.04);
+      c.lineTo(-eyeOffset + r*0.08, faceY - r*0.04);
+      c.stroke();
+      c.beginPath(); c.arc(eyeOffset, faceY, eyeRadius*1.2, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(0, faceY + r*0.02, r*0.15, 0, Math.PI); c.stroke();
+    }
+    // 5: 1000円【ビジネスマン/ナイスミドル】(髭・ネクタイ)
+    else if(t.faceType === 5) {
+      c.beginPath(); c.arc(-eyeOffset, faceY - r*0.04, eyeRadius, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY - r*0.04, eyeRadius, 0, Math.PI*2); c.fill();
+      // 立派なヒゲ
+      c.fillStyle = "#333333";
+      c.beginPath(); 
+      c.moveTo(-r*0.18, faceY + r*0.04);
+      c.quadraticCurveTo(0, faceY + r*0.02, r*0.18, faceY + r*0.04);
+      c.quadraticCurveTo(r*0.1, faceY + r*0.14, 0, faceY + r*0.08);
+      c.quadraticCurveTo(-r*0.1, faceY + r*0.14, -r*0.18, faceY + r*0.04);
+      c.fill();
+      // 赤ネクタイ
+      c.fillStyle = "#e63946";
+      c.beginPath();
+      c.moveTo(-r*0.05, faceY + r*0.18);
+      c.lineTo(r*0.05, faceY + r*0.18);
+      c.lineTo(r*0.08, faceY + r*0.35);
+      c.lineTo(0, faceY + r*0.42);
+      c.lineTo(-r*0.08, faceY + r*0.35);
+      c.closePath(); c.fill();
+    }
+    // 6: 1万円【ヤンキー】(サングラス・リーゼント風髪型・へノ字口)
+    else if(t.faceType === 6) {
+      // リーゼント髪型
+      c.fillStyle = "#111111";
+      c.beginPath();
+      c.ellipse(0, -r*0.7, r*0.42, r*0.22, 0, 0, Math.PI*2);
+      c.fill();
+      // サングラス
+      c.fillStyle = "#111111";
+      c.fillRect(-eyeOffset - r*0.12, faceY - r*0.08, r*0.25, r*0.14);
+      c.fillRect(eyeOffset - r*0.13, faceY - r*0.08, r*0.25, r*0.14);
+      c.beginPath(); c.moveTo(-eyeOffset, faceY); c.lineTo(eyeOffset, faceY); c.stroke();
+      // ニタリ口
+      c.beginPath(); c.moveTo(-r*0.12, faceY + r*0.15); c.lineTo(r*0.12, faceY + r*0.08); c.stroke();
+    }
+    // 7: 10万円【セレブ】(星型サングラス・赤い口紅)
+    else if(t.faceType === 7) {
+      // 星型サングラス
+      c.fillStyle = "#ff007f";
+      c.beginPath(); c.arc(-eyeOffset, faceY - r*0.02, r*0.14, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY - r*0.02, r*0.14, 0, Math.PI*2); c.fill();
+      c.strokeStyle = "#ffffff"; c.lineWidth = Math.max(1, r*0.03);
+      c.beginPath(); c.moveTo(-eyeOffset + r*0.14, faceY - r*0.02); c.lineTo(eyeOffset - r*0.14, faceY - r*0.02); c.stroke();
+      // 赤リップ
+      c.fillStyle = "#d62828";
+      c.beginPath(); c.ellipse(0, faceY + r*0.12, r*0.12, r*0.06, 0, 0, Math.PI*2); c.fill();
+    }
+    // 8: 100万円【富豪】(シルクハット・モノクル/片眼鏡)
+    else if(t.faceType === 8) {
+      // シルクハット
+      c.fillStyle = "#2b2d42";
+      c.fillRect(-r*0.35, -r*0.95, r*0.7, r*0.12);
+      c.fillRect(-r*0.22, -r*1.3, r*0.44, r*0.38);
+      c.fillStyle = "#d4af37";
+      c.fillRect(-r*0.22, -r*0.98, r*0.44, r*0.06);
+      
+      c.beginPath(); c.arc(-eyeOffset, faceY, eyeRadius, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY, eyeRadius, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(0, faceY + r*0.08, r*0.12, 0, Math.PI); c.stroke();
+      // 片眼鏡 (右目)
+      c.strokeStyle = "#d4af37"; c.lineWidth = Math.max(1.5, r*0.04);
+      c.beginPath(); c.arc(eyeOffset, faceY, r*0.15, 0, Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(eyeOffset + r*0.12, faceY + r*0.08); c.lineTo(r*0.35, faceY + r*0.35); c.stroke();
+    }
+    // 9: 1000万円【王様】(王冠・豪華な髭)
+    else if(t.faceType === 9) {
+      // 王冠
+      c.fillStyle = "#ffb703"; c.strokeStyle = "#d4a373"; c.lineWidth = Math.max(1, r*0.04);
+      c.beginPath();
+      c.moveTo(-r*0.3, -r*0.75);
+      c.lineTo(-r*0.35, -r*1.15);
+      c.lineTo(-r*0.12, -r*0.9);
+      c.lineTo(0, -r*1.2);
+      c.lineTo(r*0.12, -r*0.9);
+      c.lineTo(r*0.35, -r*1.15);
+      c.lineTo(r*0.3, -r*0.75);
+      c.closePath(); c.fill(); c.stroke();
+
+      c.fillStyle = "#222222";
+      c.beginPath(); c.arc(-eyeOffset, faceY - r*0.02, eyeRadius*1.2, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(eyeOffset, faceY - r*0.02, eyeRadius*1.2, 0, Math.PI*2); c.fill();
+      // 王様ヒゲ
+      c.fillStyle = "#e9c46a";
+      c.beginPath();
+      c.arc(0, faceY + r*0.1, r*0.2, 0, Math.PI); c.fill();
+    }
+    // 10: 1億円【仙人】(長い白眉毛・白髭・細められた悟りの目)
+    else if(t.faceType === 10) {
+      // 細められた目 (悟り)
+      c.strokeStyle = "#333333"; c.lineWidth = Math.max(2, r*0.05);
+      c.beginPath(); c.arc(-eyeOffset, faceY - r*0.02, r*0.1, Math.PI*1.1, Math.PI*1.9); c.stroke();
+      c.beginPath(); c.arc(eyeOffset, faceY - r*0.02, r*0.1, Math.PI*1.1, Math.PI*1.9); c.stroke();
+      // ほほえみ口
+      c.beginPath(); c.arc(0, faceY + r*0.02, r*0.12, 0, Math.PI); c.stroke();
+      // 長い白眉毛
+      c.strokeStyle = "#ffffff"; c.lineWidth = Math.max(2.5, r*0.06);
+      c.beginPath(); c.moveTo(-eyeOffset - r*0.12, faceY - r*0.16); c.quadraticCurveTo(-eyeOffset, faceY - r*0.28, -eyeOffset + r*0.15, faceY - r*0.12); c.stroke();
+      c.beginPath(); c.moveTo(eyeOffset + r*0.12, faceY - r*0.16); c.quadraticCurveTo(eyeOffset, faceY - r*0.28, eyeOffset - r*0.15, faceY - r*0.12); c.stroke();
+      // 長い仙人ヒゲ
+      c.fillStyle = "#ffffff";
+      c.beginPath();
+      c.moveTo(-r*0.2, faceY + r*0.12);
+      c.quadraticCurveTo(0, faceY + r*0.1, r*0.2, faceY + r*0.12);
+      c.quadraticCurveTo(r*0.12, faceY + r*0.5, 0, faceY + r*0.62);
+      c.quadraticCurveTo(-r*0.12, faceY + r*0.5, -r*0.2, faceY + r*0.12);
+      c.fill();
+    }
+
+    c.restore();
+  }
+
+  function render(){
+    ctx.clearRect(0,0,WIDTH,HEIGHT);
+    
+    ctx.setLineDash([8,8]); ctx.strokeStyle = "rgba(255,107,107,0.5)"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, DANGER_Y); ctx.lineTo(WIDTH, DANGER_Y); ctx.stroke(); ctx.setLineDash([]);
+    
+    Matter.Composite.allBodies(world).forEach(function(b){ 
+      if(b.tierIndex !== undefined) {
+        drawCoinCharacter(ctx, b.position.x, b.position.y, b.angle, b.tierIndex);
+      }
+    });
+    
+    if(aiming && canDrop && !isGameOver && !isPaused){
+      ctx.strokeStyle = "rgba(255, 117, 181, 0.4)"; ctx.lineWidth = 2; ctx.setLineDash([5,5]);
+      ctx.beginPath(); ctx.moveTo(aimX, DROP_Y); ctx.lineTo(aimX, HEIGHT); ctx.stroke(); ctx.setLineDash([]);
+    }
+    
+    if(canDrop && !isGameOver && !isPaused) {
+      drawCoinCharacter(ctx, aimX, DROP_Y, 0, currentTier);
+    }
+    
+    for(var i=floaters.length-1;i>=0;i--){
+      var f = floaters[i]; f.y += f.vy; f.life--;
+      ctx.save(); 
+      ctx.globalAlpha = f.life/60; 
+      ctx.fillStyle = "#ff4097"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3;
+      ctx.font = "900 18px 'Mochiy Pop One', sans-serif"; ctx.textAlign="center"; 
+      ctx.strokeText(f.text, f.x, f.y); ctx.fillText(f.text, f.x, f.y); 
+      ctx.restore();
+      if(f.life<=0) floaters.splice(i,1);
+    }
+  }
+
+  function loop(now){
+    if(isPaused){ requestAnimationFrame(loop); return; }
+    if(!lastFrameTime) lastFrameTime = now;
+    var dt = Math.min(32, now - lastFrameTime); Matter.Engine.update(engine, dt);
+    processPendingMerges(); if(!isGameOver) checkGameOver(now);
+    render(); lastFrameTime = now;
+    if(!isGameOver) requestAnimationFrame(loop); else render();
+  }
+
+  /* ---------- NAV ---------- */
+  $("btn-pause").addEventListener("click", function(){ if(isGameOver) return; isPaused = true; stopBGM(); $("overlay-pause").classList.remove("hidden"); });
+  $("btn-resume").addEventListener("click", function(){ isPaused = false; startBGM(); $("overlay-pause").classList.add("hidden"); lastFrameTime = performance.now(); requestAnimationFrame(loop); });
+  $("btn-pause-ranking").addEventListener("click", function(){ openRanking(); });
+  $("btn-pause-quit").addEventListener("click", function(){ isPaused = false; isGameOver = true; $("overlay-pause").classList.add("hidden"); showScreen(screenStart); });
+  $("btn-retry").addEventListener("click", function(){ actuallyStartGame(); });
+  $("btn-goto-ranking").addEventListener("click", function(){ openRanking(); });
+  $("btn-goto-title").addEventListener("click", function(){ showScreen(screenStart); });
+
+  /* ---------- INIT ---------- */
+  async function init(){
+    var n = await storageGet("player-name", false); playerName = n || "プレイヤー";
+    bestScore = await loadBest();
+    var code = await storageGet("sync-code", false);
+    if(code){ syncCode = code; try{ var d; if(useGas()){ d = await gasGet("getPlayer", { code:code }); } else { var raw = await storageGet("playerdata:"+code, true); d = raw ? JSON.parse(raw) : null; } if(d){ if(d.name) playerName = d.name; if(typeof d.bestScore === "number" && d.bestScore > bestScore) bestScore = d.bestScore; await storageSet("player-name", playerName, false); await saveBest(bestScore); } }catch(e){} }
+    refreshIdentityUI(); currentTier = randomStartTier(); nextTier = randomStartTier(); updateNextPreviewUI();
+    showScreen(screenStart);
+  }
+  init();
+})();
+</script>
+</body>
+</html>
