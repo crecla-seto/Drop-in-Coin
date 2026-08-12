@@ -1,0 +1,19 @@
+{
+  "name": "ドロップinコイン",
+  "short_name": "ドロップinコイン",
+  "description": "お金をあつめて合体！コインを落として遊ぶゲーム",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ff8c00",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
