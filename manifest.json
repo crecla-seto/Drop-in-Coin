@@ -3,8 +3,8 @@
   "short_name": "ドロップinコイン",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffae19",
-  "theme_color": "#ff8c00",
+  "background_color": "#0b0e14",
+  "theme_color": "#0d0f1d",
   "icons": [
     {
       "src": "icon.png",
